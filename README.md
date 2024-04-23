@@ -1,2 +1,2 @@
 # SDODynamics
-Evolution of the population of scattered disk objects
+This repository focuses on investigating the dynamical structure and evolutionary trends within the population of scattered disk objects (SDOs) in the outer regions of the solar system. The primary aim is to analyze the orbital dynamics and understand how these objects interact and evolve over time. Special emphasis is placed on identifying potential equilibrium states or asymptotic behaviors within the scattered disk population. 
