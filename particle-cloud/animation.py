@@ -13,16 +13,16 @@ M_sun = 1
 M_neptune = 5.151383772628957e-05
 a_neptune = 30.237878368382898
 
-sa = rebound.Simulationarchive("archives/archive-t_1e6-ias15-dt_1-5_rhill.bin")
+sa = rebound.Simulationarchive("archives/archive-t_1e6-mercurius-10_rhill_01.bin")
 
 #%% Plot for e(q) change
 # Initialize a figure and axis
-fig, ax = plt.subplots(figsize=(5, 5), dpi=350, constrained_layout=True)
+fig, ax = plt.subplots(figsize=(5, 5), dpi=300, constrained_layout=True)
 
 # Initialize the plot objects
 line, = ax.plot([], [],'.', ms=3, color="tab:blue")
-ax.vlines(a_neptune + 5 * r_hill(a_neptune,M_neptune, M_sun),0,1,colors='r',linestyles='dashed')
-ax.vlines(a_neptune - 5 * r_hill(a_neptune,M_neptune, M_sun),0,1,colors='r',linestyles='dashed')
+ax.vlines(a_neptune + 5 * r_hill(a_neptune, M_neptune, M_sun), 0, 2, colors='r', linestyles='dashed')
+ax.vlines(a_neptune - 5 * r_hill(a_neptune, M_neptune, M_sun), 0, 2, colors='r', linestyles='dashed')
 ax.set_xlabel("pericentre distance $q$ [au]")
 ax.set_ylabel("eccentricity $e$")
 
@@ -33,29 +33,28 @@ def init():
 
 # Define the update function
 def update(s):
-    sim = sa[s]  # iterate through each snapshot in sa
+    sim = sa[s+10]  # iterate through each snapshot in sa
     ps = sim.particles  # intermediate object to simplify the referencing
     x_data = [ps[i].orbit(primary=sim.particles[0]).a * (1-ps[i].orbit(primary=sim.particles[0]).e) for i in range(1, len(ps))]  # perihelion distance
     y_data = [ps[i].orbit(primary=sim.particles[0]).e for i in range(1, len(ps))]  # eccentricity
     line.set_data(x_data, y_data)
-    ax.set_title(f"time: {int(sa[s].t)} yr")  # Add a title with the frame number
+    ax.set_title(f"time: {int(sa[s+10].t)} yr")  # Add a title with the frame number
     # Set axis limits
-    ax.set_xlim(10, 40)
-    ax.set_ylim(0, 1.5)
+    ax.set_xlim(5, 60)
+    ax.set_ylim(0, 2)
     return line,
 
 # Create the animation
 ani = FuncAnimation(fig, update, frames=len(sa), init_func=init, blit=True)
 
 # Save the animation as a GIF
-ani.save('gifs/q-evolution-t_10e6-dt_1-5_rhill_extended.gif', writer='pillow', fps=24)
+ani.save('gifs/q-t_1e6-mercurius-10_rhill_01.gif', writer='pillow', fps=24)
 
 plt.close()
 
 print('First gif saved')
 
-'''#%% plot for e(a) change
-fig, ax = plt.subplots(figsize=(5, 5), dpi=350, constrained_layout=True)
+'''fig, ax = plt.subplots(figsize=(5, 5), dpi=350, constrained_layout=True)
 
 # Initialize the plot objects
 line, = ax.plot([], [],'.', ms=3, color="tab:blue")
@@ -71,7 +70,7 @@ def init():
 def update(s):
     sim = sa[s]  # iterate through each snapshot in sa
     ps = sim.particles  # intermediate object to simplify the referencing
-    x_data = [ps[i].orbit(primary=sim.particles[0]).a  for i in range(1, len(ps))]  # perihelion distance
+    x_data = [ps[i].orbit(primary=sim.particles[0]).a for i in range(1, len(ps))]  # perihelion distance
     y_data = [ps[i].orbit(primary=sim.particles[0]).e for i in range(1, len(ps))]  # eccentricity
     line.set_data(x_data, y_data)
     ax.set_title(f"time: {int(sa[s].t)} yr")  # Add a title with the frame number
@@ -84,7 +83,7 @@ def update(s):
 ani = FuncAnimation(fig, update, frames=len(sa), init_func=init, blit=True)
 
 # Save the animation as a GIF
-ani.save('gifs/a-evolution-t_10e6-dt_1-5_rhill.gif', writer='pillow', fps=24)
+ani.save('gifs/a-t_1e6-mercurius-10_rhill_01.gif', writer='pillow', fps=24)
 
 plt.close()
 

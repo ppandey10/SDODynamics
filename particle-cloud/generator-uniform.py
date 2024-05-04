@@ -11,8 +11,8 @@ a_neptune = 30.237878368382898
 
 
 # create arrays for e and q
-e = np.arange(0, 1, .01)
-q = np.arange(a_neptune - r_hill(a_neptune,M_neptune,M_sun), a_neptune + r_hill(a_neptune,M_neptune,M_sun), .01)
+e = np.arange(0, 0.9, .05)
+q = np.arange(a_neptune - 10 * r_hill(a_neptune,M_neptune,M_sun), a_neptune + 10 * r_hill(a_neptune,M_neptune,M_sun), .5)
 
 orbital_elements = []
 
