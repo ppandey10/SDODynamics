@@ -22,6 +22,7 @@ plt.show()'''
 
 #%% Simulation
 start_time = time.perf_counter()
+
 sim = rebound.Simulation()
 
 # right units
@@ -40,14 +41,14 @@ for i in range(len(a)):
 sim.move_to_com()
 E0 = sim.energy()
 
-sim.save_to_file("archives/archive-t_1e6-mercurius-10_rhill_02.bin", interval=2e2, delete_file=True)
+sim.save_to_file("archives/archive-t_1e6-mercurius-10_rhill_03.bin", interval=5e2, delete_file=True)
 
 sim.integrator = "mercurius"
 
 # settings for mercurius integrator
-sim.dt = sim.particles[1].P * 0.05  # time-step of used WH-fast(?) integrator
-sim.ri_ias15.min_dt = 0.3           # minimal timestep of used ias15-integrator
-sim.ri_mercurius.r_crit_hill = 3    # hill radius when integrator is switched
+sim.dt = sim.particles[1].P * 0.1   # time-step of used WH-fast integrator
+sim.ri_ias15.min_dt = 0.6           # minimal timestep of used ias15-integrator
+sim.ri_mercurius.r_crit_hill = 4    # hill radius when integrator is switched
 
 # Integrate
 sim.integrate(1e6)
