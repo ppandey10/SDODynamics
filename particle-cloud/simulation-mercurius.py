@@ -12,14 +12,6 @@ a = df[2]
 e = df[1]
 q = df[0]
 
-'''#plot initial distribution
-import matplotlib.pyplot as plt
-
-fig, ax = plt.subplots()
-ax.plot(q, e, 'o')
-plt.show()'''
-
-
 #%% Simulation
 start_time = time.perf_counter()
 
@@ -32,24 +24,25 @@ sim.units = ('yr', 'AU', 'Msun')
 # Add Sun and Neptune
 sim.add('Sun')
 sim.add('Neptune')
+print("added Sun and Neptune")
 
 # add object from csv
 for i in range(len(a)):
     rand = np.random.random()*2*np.pi
     sim.add(a=a[i], e=e[i], Omega=0, omega=rand, f=rand)
+print("added test particles")
+
+sim.integrator = "mercurius"
+sim.save_to_file("archives/archive-t_1e6-mercurius-10_rhill_test01.bin", interval=5e2, delete_file=True)
+
+# settings for mercurius integrator
+sim.dt = sim.particles[1].P * 0.3   # time-step of used WH-fast integrator
+#sim.ri_ias15.min_dt = 1              # minimal timestep of used ias15-integrator
+#sim.ri_mercurius.r_crit_hill = 1     # hill radius when integrator is switched
 
 sim.move_to_com()
 E0 = sim.energy()
-
-sim.save_to_file("archives/archive-t_1e6-mercurius-10_rhill_04.bin", interval=5e2, delete_file=True)
-
-sim.integrator = "mercurius"
-
-# settings for mercurius integrator
-sim.dt = sim.particles[1].P * 0.05   # time-step of used WH-fast integrator
-sim.ri_ias15.min_dt = 1           # minimal timestep of used ias15-integrator
-sim.ri_mercurius.r_crit_hill = 2    # hill radius when integrator is switched
-
+print("starting integration")
 # Integrate
 sim.integrate(1e6)
 
