@@ -20,7 +20,8 @@ plt.rcParams["ytick.direction"] = 'in'
 plt.rcParams["xtick.top"] = True
 plt.rcParams["ytick.right"] = True
 
-
+# close all plot when opened
+plt.close('all')
 
 #%% setup simulation data
 
@@ -33,51 +34,94 @@ M_sun = 1
 M_neptune = 5.151383772628957e-05
 a_neptune = 30.237878368382898
 
-sa = rebound.Simulationarchive("archives/archive-t_1e6-mercurius-10_rhill_02.bin")
+sa1 = rebound.Simulationarchive("archives/custom-10e6-e-high-04.bin")
+sa2 = rebound.Simulationarchive("archives/custom-10e6-e-low-04.bin")
 
-max = len(sa)
+max_1 = len(sa1)
+max_2 = len(sa2)
+
+print(sa1[-1])
+print(sa2[-1])
+
 
 #%% load initial results
-sim_initial = sa[-max]
+sim1_initial = sa1[-max_1]
+sim2_initial = sa2[-max_2]
 
-e_initial = []
-a_initial = []
-for i in range(2, 576):
-    e_initial.append(sim_initial.particles[i].e)
-    a_initial.append(sim_initial.particles[i].a)
+# last particle index
 
-e_initial = np.array(e_initial)
-a_initial = np.array(a_initial)
-q_initial = a_initial * (1-e_initial)
+i_last = sa1[1].N
+
+e_initial1 = []
+e_initial2 = []
+#
+a_initial1 = []
+a_initial2 = []
+
+for i in range(2, i_last):
+    e_initial1.append(sim1_initial.particles[i].e)
+    a_initial1.append(sim1_initial.particles[i].a)
+
+for k in range(2,i_last):
+    e_initial2.append(sim2_initial.particles[k].e)
+    a_initial2.append(sim2_initial.particles[k].a)
+
+e_initial1 = np.array(e_initial1)
+a_initial1 = np.array(a_initial1)
+q_initial1 = a_initial1 * (1-e_initial1)
+
+e_initial2 = np.array(e_initial2)
+a_initial2 = np.array(a_initial2)
+q_initial2 = a_initial2 * (1-e_initial2)
 
 #%% load final results
-sim_final = sa[-1]
-print("sim-final: ", sim_final)
-e_final = []
-a_final = []
-for i in range(2, 576):
-    e_final.append(sim_final.particles[i].e)
-    a_final.append(sim_final.particles[i].a)
+sim_final1 = sa1[-1]
+sim_final2 = sa2[-1]
 
-e_final = np.array(e_final)
-a_final = np.array(a_final)
-q_final = a_final * (1-e_final)
+
+e_final1 = []
+a_final1 = []
+e_final2 = []
+a_final2 = []
+
+for i in range(2, i_last):
+    e_final1.append(sim_final1.particles[i].e)
+    a_final1.append(sim_final1.particles[i].a)
+
+for k in range(2, i_last):
+    e_final2.append(sim_final2.particles[k].e)
+    a_final2.append(sim_final2.particles[k].a)
+
+
+e_final1 = np.array(e_final1)
+a_final1 = np.array(a_final1)
+q_final1 = a_final1 * (1-e_final1)
+
+e_final2 = np.array(e_final2)
+a_final2 = np.array(a_final2)
+q_final2 = a_final2 * (1-e_final2)
 
 #%% plotting
 fig, axs = plt.subplots(1, 2, constrained_layout=True, sharey=True)
-
-axs[0].scatter(a_initial, e_initial, s=5, label=r"$t_{\text{sim}}=0$")
-axs[0].scatter(a_final, e_final, s=5, alpha=0.5, label=r"$t_{\text{sim}}=10^6\,yr$")
+#
+axs[0].scatter(a_initial1, e_initial1, s=5, label=r"$t_{\text{sim}}=0$", color = "tab:blue")
+axs[0].scatter(a_initial2, e_initial2, s=5,color = "tab:blue")
+axs[0].scatter(a_final1, e_final1, s=5, alpha=0.5, label=r"$t_{\text{sim}}=10^6\,yr$", color = "tab:orange")
+axs[0].scatter(a_final2, e_final2, s=5, alpha=0.5, color = "tab:orange")
+#
 axs[0].set_xlabel(r"semi-major axis $a$ [au]")
 axs[0].set_ylabel(r"eccentricity $e$")
 axs[0].set_xscale("log")
 axs[0].legend()
 axs[0].set_ylim([0, 1])
-
-axs[1].scatter(q_initial, e_initial, s=5)
-axs[1].scatter(q_final, e_final, s=5, alpha=0.5)
+#
+axs[1].scatter(q_initial1, e_initial1, s=5, color = "tab:blue")
+axs[1].scatter(q_initial2, e_initial2, s=5, color = "tab:blue")
+axs[1].scatter(q_final1, e_final1, s=5, alpha=0.5, color = "tab:orange")
+axs[1].scatter(q_final2, e_final2, s=5, alpha=0.5, color = "tab:orange")
+#
 axs[1].set_xlabel(r"pericentre distance $q$ [au]")
 axs[1].set_ylim([0, 1])
 
-plt.savefig("plots/mercurius-1e6-02.png")
+#plt.savefig("plots/mercurius-1e6-02.png")
 plt.show()
