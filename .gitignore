@@ -1,4 +1,4 @@
 particle-cloud/archives/*
 particle-cloud/gifs/*
 particle-cloud/.idea/
-pyright.json
+pyrightconfig.json
