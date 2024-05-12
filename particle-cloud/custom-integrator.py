@@ -6,14 +6,13 @@ from threading import Thread
 from tqdm import tqdm
 
 #%% Simulation
-start_time = time.perf_counter()
-
+# initialise two simulations which can run parallel later on
 sim1 = rebound.Simulation()
 sim2 = rebound.Simulation()
 
-## right units
-# sim1.units = ('yr', 'AU', 'Msun')
-# sim2.units = ('yr', 'AU', 'Msun')
+## correction of units
+sim1.units = ('yr', 'AU', 'Msun')
+sim2.units = ('yr', 'AU', 'Msun')
 
 
 ## Add Sun and Neptune
@@ -24,13 +23,13 @@ sim2.add('Neptune')
 print("added Sun and Neptune")
 
 
-## add uniformly distributed object
+## Functions for test objects and Integration
 
 # Function for Hill-Radius
 def r_hill(a_small_body, M_small_body, M_central_body):
     return a_small_body * (M_small_body / (3 * M_central_body)) ** (1 / 3)
 
-
+# Function for distribution
 def generate_uniform_distribution(e_, q_):
     # takes in two arrays "e" and "q" and outputs numpy array with "q", "e" and "a"
     o_e = []
@@ -41,38 +40,15 @@ def generate_uniform_distribution(e_, q_):
     o_e = np.array(o_e)
     return o_e
 
-
-# sort by eccentricity
-#orbital_elements[orbital_elements[:, 1].argsort()]
-
-a_neptune = sim1.particles[1].a
-M_neptune = sim1.particles[1].m
-M_sun = sim1.particles[0].m
-
-# create arrays for e and q
-e_generate = np.arange(0, 0.9, 0.05)
-q_generate = np.arange(a_neptune - (5 * r_hill(a_neptune, M_neptune, M_sun)),
-                       a_neptune + (20 * r_hill(a_neptune, M_neptune, M_sun)), 5)
-
-orbital_elements = generate_uniform_distribution(e_generate, q_generate)
-
-q = orbital_elements[:, 0]
-e = orbital_elements[:, 1]
-a = orbital_elements[:, 2]
-
-print(f"added {len(orbital_elements)} test particles")
-
-
-## Integration
-
 # custom function for Integration
 
-def custom_integration(integrator, dt_min_ias15, r_hill_crit, t_sim, filename1, filename2):
+def custom_integration(e, a, integrator, dt_min_ias15, r_hill_crit, t_sim, filename1, filename2):
     # specify integrator
     integrators = ["ias15", "mercurius"]
     sim1.integrator = integrators[integrator]
     sim2.integrator = integrators[integrator]
 
+    # Define two functions for integration to pass them in threads later on.
     def first_integration(progress_bar):
 
         # add particles
@@ -82,6 +58,7 @@ def custom_integration(integrator, dt_min_ias15, r_hill_crit, t_sim, filename1, 
                 sim1.add(a=a[ind], e=e[ind], Omega=0, omega=rand, f=rand)
         print("N particles (sim1): ", sim1.N)
 
+        # different options depending on choice of integrator (can be removed maybe if mercurius is chosen anyway)
         if integrators == "mercurius":
             # sim1.ri_ias15.min_dt = dt_min_ias15
             sim1.dt = dt_min_ias15 * sim1.particles[1].P / (2 * np.pi)
@@ -98,12 +75,12 @@ def custom_integration(integrator, dt_min_ias15, r_hill_crit, t_sim, filename1, 
         E0 = sim1.energy()
         time_steps = np.arange(0, t_sim, 1)
 
-
+        # integrate of each timestep
         for i, ts in enumerate(time_steps):
             sim1.integrate(ts, exact_finish_time=0)
-            sim1.save_to_file(filename1)
-
-            if ts % 100 == 0:
+            #check after 100 timesteps if objects have been ejected
+            if ts % 1000 == 0:
+                sim1.save_to_file(filename1)
                 removed_particles = 0
                 for k in range(2, sim1.N):
                     if sim1.particles[k].e > 1.5:
@@ -126,7 +103,7 @@ def custom_integration(integrator, dt_min_ias15, r_hill_crit, t_sim, filename1, 
 
         if integrators == "mercurius":
             #sim2.ri_ias15.min_dt =  dt_min_ias15
-            sim2.dt = 5 * dt_min_ias15 * sim2.particles[1].P / (2 * np.pi)
+            sim2.dt = 5 * dt_min_ias15 * sim2.particles[1].P / (2 * np.pi) # timesteps are 5-times larger then for low eccentricities
             sim2.ri_mercurius.r_crit_hill = r_hill_crit
 
         if integrators == "ias15":
@@ -143,9 +120,8 @@ def custom_integration(integrator, dt_min_ias15, r_hill_crit, t_sim, filename1, 
 
         for i, ts in enumerate(time_steps):
             sim2.integrate(ts, exact_finish_time=0)
-            sim2.save_to_file(filename2)
-
-            if ts % 100 == 0:
+            if ts % 1000 == 0:
+                sim2.save_to_file(filename2)
                 removed_particles = 0
                 for k in range(2, sim2.N):
                     if sim2.particles[k].e > 1.5:
@@ -173,17 +149,36 @@ def custom_integration(integrator, dt_min_ias15, r_hill_crit, t_sim, filename1, 
     threadA.join()
     threadB.join()
 
+    # Uncomment this and comment thread.start() + thread.join() to let threads run after each other
     # threadA.run()
     # threadB.run()
 
 
 # Integrate
+# necessary for r_hill
+a_neptune = sim1.particles[1].a
+M_neptune = sim1.particles[1].m
+M_sun = sim1.particles[0].m
 
+# create arrays for e and q with Hill-radius as reference
+e_generate = np.arange(0, 0.9, 0.05)
+q_generate = np.arange(a_neptune - (5 * r_hill(a_neptune, M_neptune, M_sun)),
+                       a_neptune + (20 * r_hill(a_neptune, M_neptune, M_sun)), 1)
 
-custom_integration(0,
-                   0.2,
-                   3,
-                   1e5,
-                   "archives/archive_test_01.bin",
-                   "archives/archive_test_02.bin")
+orbital_elements = generate_uniform_distribution(e_generate, q_generate)
+
+peri = orbital_elements[:, 0]
+ecc = orbital_elements[:, 1]
+semi = orbital_elements[:, 2]
+
+print(f"added {len(orbital_elements)} test particles")
+
+custom_integration(ecc,
+                   semi,
+                 0,
+                   5,
+                   2,
+                   5e6,
+                   "archives/5e6-dt2-rhill2-elow.bin",
+                   "archives/5e6-dt2-rhill2-ehigh.bin")
 
