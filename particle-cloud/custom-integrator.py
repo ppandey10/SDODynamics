@@ -11,8 +11,8 @@ sim1 = rebound.Simulation()
 sim2 = rebound.Simulation()
 
 ## correction of units
-sim1.units = ('yr', 'AU', 'Msun')
-sim2.units = ('yr', 'AU', 'Msun')
+# sim1.units = ('yr', 'AU', 'Msun')
+# sim2.units = ('yr', 'AU', 'Msun')
 
 
 ## Add Sun and Neptune
@@ -60,7 +60,7 @@ def custom_integration(e, a, integrator, dt_min_ias15, r_hill_crit, t_sim, filen
 
         # different options depending on choice of integrator (can be removed maybe if mercurius is chosen anyway)
         if integrators == "mercurius":
-            # sim1.ri_ias15.min_dt = dt_min_ias15
+            #sim1.ri_ias15.min_dt = dt_min_ias15
             sim1.dt = dt_min_ias15 * sim1.particles[1].P / (2 * np.pi)
             sim1.ri_mercurius.r_crit_hill = r_hill_crit
 
@@ -103,7 +103,7 @@ def custom_integration(e, a, integrator, dt_min_ias15, r_hill_crit, t_sim, filen
 
         if integrators == "mercurius":
             #sim2.ri_ias15.min_dt =  dt_min_ias15
-            sim2.dt = 5 * dt_min_ias15 * sim2.particles[1].P / (2 * np.pi) # timesteps are 5-times larger then for low eccentricities
+            sim2.dt = 2 * dt_min_ias15  * sim2.particles[1].P / (2 * np.pi) # timesteps are 5-times larger then for low eccentricities
             sim2.ri_mercurius.r_crit_hill = r_hill_crit
 
         if integrators == "ias15":
@@ -175,10 +175,9 @@ print(f"added {len(orbital_elements)} test particles")
 
 custom_integration(ecc,
                    semi,
-                 0,
-                   5,
-                   2,
+                   0,
+                   0.3,
+                   3,
                    5e6,
-                   "archives/5e6-dt2-rhill2-elow.bin",
-                   "archives/5e6-dt2-rhill2-ehigh.bin")
-
+                   "archives/5e6-dt50-rhill2-elow.bin",
+                   "archives/5e6-dt100-rhill2-ehigh.bin")
