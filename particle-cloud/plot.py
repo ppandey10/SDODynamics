@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import rebound
-import numba
 
 plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 plt.rc('text', usetex=True)
@@ -44,8 +43,8 @@ a_neptune = 30.237878368382898
 
 T_neptune = 1 / a_neptune + 2 * np.sqrt(a_neptune * (1 - 0.0113 ** 2))
 
-sa1 = rebound.Simulationarchive("archives/custom-10e6-e-high-04.bin")
-sa2 = rebound.Simulationarchive("archives/custom-10e6-e-low-04.bin")
+sa1 = rebound.Simulationarchive("archives/mercurius-dtmin1-1e7-low.bin")
+sa2 = rebound.Simulationarchive("archives/mercurius-dtmin1-1e7-high.bin")
 
 max_1 = len(sa1)
 max_2 = len(sa2)
@@ -92,16 +91,19 @@ q_initial = a_initial * (1 - e_initial)
 sim_final1 = sa1[-1]
 sim_final2 = sa2[-1]
 
+i_last1 = sa1[-1].N
+i_last2 = sa2[-1].N
+
 e_final1 = []
 a_final1 = []
 e_final2 = []
 a_final2 = []
 
-for i in range(2, i_last):
+for i in range(2, i_last1):
     e_final1.append(sim_final1.particles[i].e)
     a_final1.append(sim_final1.particles[i].a)
 
-for k in range(2, i_last):
+for k in range(2, i_last2):
     e_final2.append(sim_final2.particles[k].e)
     a_final2.append(sim_final2.particles[k].a)
 
@@ -124,8 +126,8 @@ fig, axs = plt.subplots(1, 2, constrained_layout=True, sharey=True)
 semis = np.arange(0, max(a_final), 1)
 #
 axs[0].scatter(a_initial, e_initial, s=5, label=r"$t_{\text{sim}}=0$", color="tab:blue")
+axs[0].scatter(a_final, e_final, s=5, alpha=0.5, label=r"$t_{\text{sim}}=5\cdot 10^6\,yr$", color="tab:orange")
 axs[0].plot(semis, tisserand(T_neptune, semis), label=r"$T_\text{Neptune}$", color="tab:red")
-axs[0].scatter(a_final, e_final, s=5, alpha=0.5, label=r"$t_{\text{sim}}=10^6\,yr$", color="tab:orange")
 #
 axs[0].set_xlabel(r"semi-major axis $a$ [au]")
 axs[0].set_ylabel(r"eccentricity $e$")
@@ -142,24 +144,23 @@ axs[1].set_xlabel(r"pericentre distance $q$ [au]")
 #plt.savefig("plots/mercurius-1e6-02.png")
 plt.show()
 
+'''#%% 2d Histogram
 fig, axs = plt.subplots(1, 2, constrained_layout=True, sharey=True)
 axs[0].set_xlim(min(q_final), max(q_final))
 axs[0].hist2d(q_initial, e_initial, bins=(100, 100), cmap="inferno")
 axs[1].hist2d(q_final, e_final, bins=(100, 100), cmap="inferno")
 #
-axs[0].set_xlabel(r"semi-major axis $a$ [au]")
-axs[1].set_xlabel(r"semi-major axis $a$ [au]")
+axs[0].set_xlabel(r"pericentre distance $q$ [au]")
+axs[1].set_xlabel(r"pericentre distance $q$ [au]")
 axs[0].set_ylabel(r"eccentricity $e$")
-#
-
-
-plt.show()
+plt.show()'''
 
 #%% using density scatter plot
 # from https://stackoverflow.com/questions/20105364/how-can-i-make-a-scatter-plot-colored-by-density/53865762#53865762https://stackoverflow.com/questions/20105364/how-can-i-make-a-scatter-plot-colored-by-density/53865762#53865762
 from matplotlib import cm
 from matplotlib.colors import Normalize
 from scipy.interpolate import interpn
+
 
 #@numba.jit
 def density_scatter(x, y, ax=None, sort=True, bins=20):
@@ -169,7 +170,8 @@ def density_scatter(x, y, ax=None, sort=True, bins=20):
     if ax is None:
         fig, ax = plt.subplots(constrained_layout=True)
     data, x_e, y_e = np.histogram2d(x, y, bins=bins, density=True)
-    z = interpn((0.5 * (x_e[1:] + x_e[:-1]), 0.5 * (y_e[1:] + y_e[:-1])), data, np.vstack([x, y]).T, method="splinef2d", bounds_error=False)
+    z = interpn((0.5 * (x_e[1:] + x_e[:-1]), 0.5 * (y_e[1:] + y_e[:-1])), data, np.vstack([x, y]).T, method="splinef2d",
+                bounds_error=False)
 
     #To be sure to plot all data
     z[np.where(np.isnan(z))] = 0.0
@@ -180,6 +182,8 @@ def density_scatter(x, y, ax=None, sort=True, bins=20):
         x, y, z = x[idx], y[idx], z[idx]
 
     ax.scatter(x, y, c=z)
+    ax.set_xlabel(r"pericentre distance $q$ [au]")
+    ax.set_ylabel(r"eccentricity $e$")
 
     norm = Normalize(vmin=np.min(z), vmax=np.max(z))
     cbar = fig.colorbar(cm.ScalarMappable(norm=norm), ax=ax)
@@ -188,8 +192,43 @@ def density_scatter(x, y, ax=None, sort=True, bins=20):
     return ax
 
 
-density_scatter(q_final, e_final, bins=[100, 100])
-plt.show()
+#density_scatter(q_final, e_final, bins=[100, 100])
+#plt.show()
 
-density_scatter(q_initial, e_initial, bins=[100, 100])
+#density_scatter(q_initial, e_initial, bins=[100, 100])
+#plt.show()
+
+#%%
+from scipy.optimize import curve_fit
+
+def fit_func(x, a, b, c, d):
+    return a * np.exp(-b * (x/c) ** d)
+
+'''def fit_func(x, a, b):
+    return 1 - x * a * b'''
+
+
+xdata = []
+ydata = []
+
+for ind in range(len(q_final)):
+    if q_final[ind] > 30:
+        xdata.append(q_final[ind])
+        ydata.append(abs(e_final[ind] - e_initial[ind]))
+
+xdata = np.array(xdata)
+ydata = np.array(ydata)
+
+p0 = [999999, 10, 25, 2]
+
+popt, pcov = curve_fit(fit_func, xdata, ydata, p0=p0)
+
+fig, ax = plt.subplots(constrained_layout=True)
+ax.scatter(xdata, ydata, s=5, color="tab:blue")
+#ax.plot(np.sort(xdata), fit_func(np.sort(xdata), *popt), color="tab:orange")
+ax.set_xlabel(r"pericentre distance $q$ [au]")
+ax.set_ylabel(r"eccentricity deviation $\Delta e$")
+#ax.set_xscale("log")
+#ax.set_yscale("log")
+#ax.set_xlim(30, max(q_final))
 plt.show()
