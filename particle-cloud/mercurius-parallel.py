@@ -56,6 +56,7 @@ def custom_integration(e, a, dt, r_hill_crit, t_sim, filenames):
             if ts % 1000 == 0:  # Adjust the frequency of removals
                 sim.save_to_file(filename)
                 # Remove particles with e > 1.02
+                # TODO: additional condition for distance of particle after close encounter
                 particles_to_remove = [p for p in sim.particles[1:] if p.e > 1.02]
                 for p in particles_to_remove:
                     sim.remove(p)
@@ -87,5 +88,5 @@ orbital_elements = generate_uniform_distribution(e_generate, q_generate)
 
 print(f"added {len(orbital_elements)} test particles")
 
-custom_integration(orbital_elements[:, 1], orbital_elements[:, 2], 0.5, 3, 1e7,
-               ["archives/jup-mercurius-dtmin05-1e7-high.bin", "archives/jup-mercurius-dtmin05-1e7-low.bin"])
+custom_integration(orbital_elements[:, 1], orbital_elements[:, 2], 0.5, 3, 1e6,
+               ["archives/testa.bin", "archives/testb.bin"])
