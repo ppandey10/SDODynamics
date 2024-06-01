@@ -97,6 +97,7 @@ def num_evo(i,j):
     # i,j: indices of matrix of 2d histogram
     n_t = []
     for k in range(1,len(H_t)):
+        # use difference between initial matrix
         n_t.append(H_t[k][i,j]-H_t[1][i,j])
     return n_t
 
