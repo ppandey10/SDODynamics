@@ -3,68 +3,29 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import rebound
-plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-plt.rc('text', usetex=True)
-plt.rc('axes', labelsize=11)  #fontsize of the x and y labels
-plt.rcParams['text.latex.preamble'] = r"\usepackage{amsmath}\usepackage{siunitx}\usepackage{newtx}"
-plt.rcParams['errorbar.capsize'] = 4  # Einstellung Dicke der Fehlerbalkenenden
-plt.rc('axes', labelsize=11, titlesize=11)
-plt.rc('legend', fontsize=11)
-plt.rc('xtick', labelsize=11)  #fontsize of the x tick labels
-plt.rc('ytick', labelsize=11)  #fontsize of the y tick labels
-plt.rcParams["figure.autolayout"] = True
-plt.rcParams["axes.axisbelow"] = True
-plt.rcParams["xtick.minor.visible"] = True
-plt.rcParams["ytick.minor.visible"] = True
-plt.rcParams["xtick.direction"] = 'in'
-plt.rcParams["ytick.direction"] = 'in'
-plt.rcParams["xtick.top"] = True
-plt.rcParams["ytick.right"] = True
+from load_orb_elem import LoadOrbitalElements
+plt.style.use("custom.mplstyle")
+
+#%% get data from archive files
+orbital_elements = LoadOrbitalElements("archives/mercurius-dtmin1-1e7-low.bin", "archives/mercurius-dtmin1-1e7-high.bin")
+
+sa1 = orbital_elements["sa1"]
+sa2 = orbital_elements["sa2"]
+
+e_initial = orbital_elements["e_initial"]
+a_initial = orbital_elements["a_initial"]
+q_initial = orbital_elements["q_initial"]
+
+e_final = orbital_elements["e_final"]
+a_final = orbital_elements["a_final"]
+q_final = orbital_elements["q_final"]
 
 
-#%% Iterate through timesteps and save matrix H
-sa1 = rebound.Simulationarchive("archives/mercurius-dtmin1-1e7-low.bin")
-sa2 = rebound.Simulationarchive("archives/mercurius-dtmin1-1e7-high.bin")
-
-# boundaries for edges from initial distribution
-sim1_initial = sa1[-len(sa1)]
-sim2_initial = sa2[-len(sa2)]
-
-# last particle index
-i_last1 = sa1[1].N
-i_last2 = sa2[1].N
-
-# create arrays for initial a, e and q
-e_initial1 = e_initial2 = a_initial1 = a_initial2 = np.empty([])
-
-for i in range(2, i_last1):
-    e_initial1 = np.append(e_initial1, sim1_initial.particles[i].e)
-    a_initial1 = np.append(a_initial1, sim1_initial.particles[i].a)
-
-for k in range(2, i_last2):
-    e_initial2 = np.append(e_initial2, sim2_initial.particles[k].e)
-    a_initial2 = np.append(a_initial2, sim2_initial.particles[k].a)
-
-q_initial1 = a_initial1 * (1 - e_initial1)
-q_initial2 = a_initial2 * (1 - e_initial2)
-
-q_initial = np.append(q_initial1, q_initial2)
-a_initial = np.append(a_initial1, a_initial2)
-e_initial = np.append(e_initial1, e_initial2)
-
-# set edges of histogram
-#q_initial = q_initial[1:]
-x_min = 26.328623 #min(q_initial)
-x_max = max(q_initial)
+### Version with fixed, hardcoded edges
+xedges = np.linspace(20, 45, 4)
+yedges = np.linspace(0, 1, 4)
 
 
-xedges = np.linspace(x_min, x_max, 4)  # 4 edges to create 3 bins
-
-# Calculate y-axis edges
-y_min = 0.000207#min(e_initial)
-y_max = max(e_initial)
-
-yedges = np.linspace(y_min, y_max, 4)  # 4 edges to create 3 bins
 print("xedges: ",xedges)
 print("yedges: ",yedges)
 
@@ -87,10 +48,18 @@ for s in range(len(sa1)):
 # example colormesh of one 2d histogram
 fig, ax = plt.subplots(constrained_layout=True)
 X, Y = np.meshgrid(xedges, yedges)
-ax.pcolormesh(X, Y, H_t[0])
+# plot bars for 2d histogram
+mesh = ax.pcolormesh(X, Y, H_t[0])
+cbar = fig.colorbar(mesh, ax=ax)
+cbar.set_label('number of particles')#, rotation=270)
+# scatterplots of orbital elements of actual objects
+ax.scatter(q_initial, e_initial,s=3)
+ax.scatter(q_final, e_final,s=3)
+ax.set_ylim(0,1)
+ax.set_xlim(20,45)
 ax.set_xlabel(r"$q$ [au]")
 ax.set_ylabel(r"$e$")
-plt.show()
+
 
 # look at time evolution of number of particles in one square
 def num_evo(i,j):
