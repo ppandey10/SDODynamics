@@ -1,0 +1,38 @@
+# Figure size in inches
+# max width is 3.5 for single column
+#ratio=1.33333 # or 1.61803398 (golden ration)
+#figure.figsize: 3.375, 2.531  # ratio=1.33333
+#figure.figsize : 3.3, 2.5    # ratio=1.33333
+figure.figsize : 5, 5
+
+
+
+# Font Family
+font.family:       serif  # or sans-serif
+font.serif:        Times
+font.sans-serif:   Helvetica
+mathtext.fontset : stix  # or dejavuserif or dejavusans
+axes.labelsize: 11
+xtick.labelsize: 11
+ytick.labelsize: 11
+legend.fontsize: 11
+font.size: 11
+
+# LaTeX packages
+text.usetex: True
+#pgf.rcfonts: False
+text.latex.preamble: \usepackage[utf8]{inputenc} \usepackage[T1]{fontenc} \usepackage[detect-all,locale=UK]{siunitx}
+
+
+# Layout configuration
+figure.constrained_layout.use: True
+xtick.direction: in
+ytick.direction: in
+xtick.minor.visible: True
+ytick.minor.visible: True
+xtick.top: True
+ytick.right: True
+errorbar.capsize: 4
+
+# colorblind colormap
+axes.prop_cycle: cycler("color",["#3f90da", "#ffa90e", "#bd1f01", "#94a4a2", "#832db6", "#a96b59", "#e76300", "#b9ac70", "#717581", "#92dadd"])
