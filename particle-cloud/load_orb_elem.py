@@ -4,11 +4,12 @@ import rebound
 def LoadOrbitalElements (Filepath1, Filepath2):
 
 	'''
-	In: 
+	Params: 
 	Filepath1: Path to File from first simulation 
 	Filepath2: Path to File from second simulation 
 
-	Out: Matrix, 	first row -> e_initial, a_initial, q_initial
+	Results: 
+	Matrix, 	first row -> e_initial, a_initial, q_initial
 					second row -> e_final, a_final, q_final
 
 	'''
