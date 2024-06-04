@@ -3,7 +3,8 @@
 #ratio=1.33333 # or 1.61803398 (golden ration)
 #figure.figsize: 3.375, 2.531  # ratio=1.33333
 #figure.figsize : 3.3, 2.5    # ratio=1.33333
-figure.figsize : 5, 5
+#figure.figsize : 5, 5 # quadratic
+figure.figsize : 6.299213, 3.89312775743
 
 
 
