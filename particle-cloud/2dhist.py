@@ -27,7 +27,7 @@ a_final = orbital_elements["a_final"]
 q_final = orbital_elements["q_final"]
 
 
-### Version with fixed, hardcoded edges
+#%% Version with fixed, hardcoded edges
 nbins = 4
 qmin = 10
 qmax = 50
@@ -112,8 +112,8 @@ print(q_t_single[0])
 # Plot lines
 fig, ax = plt.subplots(constrained_layout=True)
 for x in range(len(q_t_single)):
-    #if x  == 90 or x == 80 or x == 10:
-    if x % 20 == 0:
+    if x  == 10 or x == 11:
+    #if x  == 10:
         ax.scatter((1 - e_t_single[x][:]), q_t_single[x][:], s=10, label=f"ts {x}")
         #ax.plot((1 - e_t_single[x][:])**2, q_t_single[x][:] )
         ax.legend()
@@ -127,7 +127,7 @@ plt.show()
 # print("length q_t_single: ", len(q_t_single[0]))
 
 
-# 2d histogram at last timstep 
+# 2d histogram at last timestep
 fig, ax = plt.subplots(constrained_layout=True)
 X, Y = np.meshgrid(xedges, yedges)
 # plot bars for 2d histogram
@@ -150,23 +150,23 @@ def num_evo(i,j):
     n_t = []
     for k in range(1,len(H_t)):
         # use difference between initial matrix
-        n_t.append(H_t[k][i,j]-H_t[1][i,j])
+        n_t.append(H_t[k][i,j])#-H_t[1][i,j])
     return n_t
 
 # plot evolution of number of particles in each square
 t_steps = np.arange(1, len(H_t), 1)
-fig, axs = plt.subplots(nbins,nbins, constrained_layout=True, sharex=True, sharey=False)
+fig, axs = plt.subplots(nbins,nbins, constrained_layout=True, sharex=True, sharey=False, figsize=(16,8))
 #plt.title("Evolution of number of particles for 1Myr")
 for i in range(nbins):
     for j in range(nbins):
         axs[i,j].plot(t_steps, num_evo((nbins-1)-i, j)) # invert y-axis of plotting direction 
         #axs[i,j].scatter(t_steps, num_evo((nbins-1)-i, j))
         #axs[i, j].set_title(f"square ({(nbins-1)-i}, {j})")
-        if i > 1:
+        if i > 2:
             axs[i, j].set_xlabel("number of timesteps")
         if j == 0:
-            axs[i, j].set_ylabel(r"$\Delta n$")
+            axs[i, j].set_ylabel(r"$n$")
         #axs[i,j].set_xscale('log')
-#plt.savefig("plots/nep-merc-1Myr-4bins-diff.pdf")
+#plt.savefig("plots/nep-merc-1Myr-4bins-abs.pdf")
 #plt.show()
 plt.close()
