@@ -6,8 +6,6 @@
 #figure.figsize : 5, 5 # quadratic
 figure.figsize : 6.299213, 3.89312775743
 
-
-
 # Font Family
 font.family:       serif  # or sans-serif
 font.serif:        Times
@@ -24,7 +22,6 @@ text.usetex: True
 #pgf.rcfonts: False
 text.latex.preamble: \usepackage[utf8]{inputenc} \usepackage[T1]{fontenc} \usepackage[detect-all,locale=UK]{siunitx}
 
-
 # Layout configuration
 figure.constrained_layout.use: True
 xtick.direction: in
@@ -37,3 +34,10 @@ errorbar.capsize: 4
 
 # colorblind colormap
 axes.prop_cycle: cycler("color",["#3f90da", "#ffa90e", "#bd1f01", "#94a4a2", "#832db6", "#a96b59", "#e76300", "#b9ac70", "#717581", "#92dadd"])
+
+# legend
+legend.frameon: False
+legend.fancybox: False
+
+# pdf settings
+pdf.compression: 6
