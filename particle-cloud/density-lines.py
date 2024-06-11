@@ -1,4 +1,5 @@
 # %% libraries
+from math import e
 import numpy as np
 import matplotlib.pyplot as plt
 from load_orb_elem import LoadOrbitalElements
@@ -32,6 +33,12 @@ def LoopOverSim(sa1, sa2):
     y_t = []
     q_min = 0
     q_max = 0
+    pomega_t = []
+    e_t = []
+    a_t = []
+    q_t = []
+    pomega_filtered_t = []
+    e_filtered_t = []
     # loop
     for s in range(len(sa1)):
         if s % 2 == 0:
@@ -55,15 +62,37 @@ def LoopOverSim(sa1, sa2):
                 ps2[i].orbit(primary=sim2.particles[0]).e for i in range(1, len(ps2))
             ]  # eccentricity
 
+            pomega_data = [
+                ps1[i].orbit(primary=sim1.particles[0]).pomega
+                for i in range(1, len(ps1))
+            ] + [
+                ps2[i].orbit(primary=sim2.particles[0]).pomega
+                for i in range(1, len(ps2))
+            ]  # longitude of pericentre
+
+            a_data = [
+                ps1[i].orbit(primary=sim1.particles[0]).a for i in range(1, len(ps1))
+            ] + [
+                ps2[i].orbit(primary=sim2.particles[0]).a for i in range(1, len(ps2))
+            ]  # semi-major axis
+
+            # save data
+            e_t.append(e_data)
+            a_t.append(a_data)
+            q_t.append(q_data)
+            pomega_t.append(pomega_data)
+
             # calculate density in defined bin
             q_min = 29
             q_max = 30
             q_data = np.array(q_data)
             e_data = np.array(e_data)
+            a_data = np.array(a_data)
+            pomega_data = np.array(pomega_data)
 
-            # Filter points within the interval
+            # perihelion Filter
             mask = (q_data >= q_min) & (q_data <= q_max)
-            x_filtered = q_data[mask]
+            # x_filtered = q_data[mask]
             y_filtered = e_data[mask]
 
             if len(y_filtered) > 0:
@@ -73,10 +102,62 @@ def LoopOverSim(sa1, sa2):
                 y_values.append(y)
                 y_t.append(y_filtered)
 
-    return kde_values, y_values, y_t, q_min, q_max
+            # semi semi-major axis Filter
+            a_min = 30
+            a_max = 31
+            mask_a = (a_data >= a_min) & (a_data <= a_max)
+            e_filtered = e_data[mask_a]
+            pomega_filtered = pomega_data[mask_a]
+
+            # save filtered values
+            pomega_filtered_t.append(pomega_filtered)
+            e_filtered_t.append(e_filtered)
+
+    # transform to numpy array (faster)
+    pomega_t = np.array(pomega_t)
+    e_t = np.array(e_t)
+    a_t = np.array(a_t)
+    q_t = np.array(q_t)
+
+    result_data = {
+        "kde_values": kde_values,
+        "y_values": y_values,
+        "y_t": y_t,
+        "q_min": q_min,
+        "q_max": q_max,
+        "pomega_t": pomega_t,
+        "e_t": e_t,
+        "a_t": a_t,
+        "q_t": q_t,
+        "pomega_filtered_t": pomega_filtered_t,
+        "e_filtered_t": e_filtered_t,
+    }
+
+    return result_data
 
 
-kde_values, y_values, y_t, q_min, q_max = LoopOverSim(sa1, sa2)
+# kde_values, y_values, y_t, q_min, q_max = LoopOverSim(sa1, sa2)
+
+simulation_data = LoopOverSim(sa1, sa2)
+
+kde_values = simulation_data["kde_values"]
+y_values = simulation_data["y_values"]
+y_t = simulation_data["y_t"]
+q_min = simulation_data["q_min"]
+q_max = simulation_data["q_max"]
+
+
+# plotting forced eccentricies
+pomega_filtered_t = simulation_data["pomega_filtered_t"]
+e_t = simulation_data["pomega_filtered_t"]
+
+fig, axs = plt.subplots(2, 1)
+axs[0].scatter(
+    e_t[0] * np.cos(pomega_filtered_t[0]), e_t[0] * np.sin(pomega_filtered_t[0])
+)
+axs[1].scatter(e_t[0], pomega_filtered_t[0])
+plt.show()
+
 
 # Finding peaks and FWHM
 fwhm_t = []
@@ -218,11 +299,11 @@ def update(frame):
 
 ani = FuncAnimation(fig, update, frames=len(kde_values), init_func=init, blit=True)
 print("start saving animation")
-ani.save(
-    f"gifs/density-evolution-q-{q_min}_{q_max}.mp4",
-    writer="ffmpeg",
-    fps=24,
-    bitrate=1500,
-)
+# ani.save(
+#    f"gifs/density-evolution-q-{q_min}_{q_max}.mp4",
+#    writer="ffmpeg",
+#    fps=24,
+#    bitrate=1500,
+# )
 print("finished saving animation")
 plt.close()
