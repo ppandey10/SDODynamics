@@ -1,5 +1,4 @@
 # %% libraries
-from math import e
 import numpy as np
 import matplotlib.pyplot as plt
 from load_orb_elem import LoadOrbitalElements

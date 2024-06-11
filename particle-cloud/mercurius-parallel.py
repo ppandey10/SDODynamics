@@ -39,6 +39,16 @@ def generate_a_stripe(a_val):
     return np.column_stack((e, a))
 
 
+def generate_family(e, q, n):  # I will come back to this when I am older :)
+    results = []
+    for i in range(n):
+        rand = np.random.random() * 2 * np.pi
+        omega = rand
+        Omega = rand
+        results.append([q, e, q / (1 - e), omega, Omega])
+    return results
+
+
 # Integration function
 def custom_integration(e, a, dt, r_hill_crit, t_sim, filenames):
     """
