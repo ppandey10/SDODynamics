@@ -2,6 +2,7 @@ import numpy as np
 import rebound
 import matplotlib.pyplot as plt
 
+
 plt.style.use("custom.mplstyle")
 # load simulation archive
 sa = rebound.Simulationarchive("archives/mercurius-e0-amin-10e6.bin")
