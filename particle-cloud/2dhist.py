@@ -1,6 +1,5 @@
 # If you divide the e(q)-space into n squares how many objects are in each square for every timestep?
 #%% libraries
-from numba.core.targetconfig import re
 import numpy as np
 from numba import jit
 import matplotlib.pyplot as plt
