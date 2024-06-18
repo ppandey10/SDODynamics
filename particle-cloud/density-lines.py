@@ -11,12 +11,13 @@ plt.style.use("custom.mplstyle")
 # orbital_elements = LoadOrbitalElements("archives/testa.bin", "archives/testb.bin")
 # orbital_elements = LoadOrbitalElements("archives/jup-mercurius-dtmin05-1e6-low.bin", "archives/jup-mercurius-dtmin05-1e6-high.bin")
 orbital_elements = LoadOrbitalElements(
-    "archives/mercurius-testa-10e6.bin", "archives/mercurius-testb-10e6.bin"
+    "archives/mercurius_tsim_1e9_dtias15_5e-4_dt_5_rhill_2.bin"
 )
 
 sa1 = orbital_elements["sa1"]
-sa2 = orbital_elements["sa2"]
+# sa2 = orbital_elements["sa2"]
 
+print(sa1)
 
 ## Settings for used KDE (for higher values of "fac" oscillations increase)
 def my_kde_bandwidth(obj, fac=1):
@@ -24,7 +25,7 @@ def my_kde_bandwidth(obj, fac=1):
     return np.power(obj.n, -1.0 / (obj.d + 4)) * fac
 
 
-def LoopOverSim(sa1, sa2):
+def LoopOverSim(sa1):#, sa2):
     # empty arrays for storage of time-evolutions
     # initialise output parameters to avoid unbound error
     kde_values = []
@@ -40,40 +41,40 @@ def LoopOverSim(sa1, sa2):
     e_filtered_t = []
     # loop
     for s in range(len(sa1)):
-        if s % 2 == 0:
+        if s % 10 == 0:
             sim1 = sa1[s]
-            sim2 = sa2[s]  # iterate through each snapshot in sa
+            # sim2 = sa2[s]  # iterate through each snapshot in sa
             ps1 = sim1.particles  # simplify  referencing
-            ps2 = sim2.particles
+            # ps2 = sim2.particles
             # create list of orbital elements of all objects using list comprehension
             q_data = [
                 ps1[i].orbit(primary=sim1.particles[0]).a
                 * (1 - ps1[i].orbit(primary=sim1.particles[0]).e)
                 for i in range(1, len(ps1))
-            ] + [
-                ps2[i].orbit(primary=sim2.particles[0]).a
-                * (1 - ps2[i].orbit(primary=sim2.particles[0]).e)
-                for i in range(1, len(ps2))
-            ]  # perihelion distance
+            ] #+ [
+            #     ps2[i].orbit(primary=sim2.particles[0]).a
+            #     * (1 - ps2[i].orbit(primary=sim2.particles[0]).e)
+            #     for i in range(1, len(ps2))
+            # ]  # perihelion distance
             e_data = [
                 ps1[i].orbit(primary=sim1.particles[0]).e for i in range(1, len(ps1))
-            ] + [
-                ps2[i].orbit(primary=sim2.particles[0]).e for i in range(1, len(ps2))
-            ]  # eccentricity
+            ] #+ [
+            #     ps2[i].orbit(primary=sim2.particles[0]).e for i in range(1, len(ps2))
+            # ]  # eccentricity
 
             pomega_data = [
                 ps1[i].orbit(primary=sim1.particles[0]).pomega
                 for i in range(1, len(ps1))
-            ] + [
-                ps2[i].orbit(primary=sim2.particles[0]).pomega
-                for i in range(1, len(ps2))
-            ]  # longitude of pericentre
+            ] #+ [
+            #     ps2[i].orbit(primary=sim2.particles[0]).pomega
+            #     for i in range(1, len(ps2))
+            # ]  # longitude of pericentre
 
             a_data = [
                 ps1[i].orbit(primary=sim1.particles[0]).a for i in range(1, len(ps1))
-            ] + [
-                ps2[i].orbit(primary=sim2.particles[0]).a for i in range(1, len(ps2))
-            ]  # semi-major axis
+            ] #+ [
+            #     ps2[i].orbit(primary=sim2.particles[0]).a for i in range(1, len(ps2))
+            # ]  # semi-major axis
 
             # save data
             e_t.append(e_data)
@@ -82,8 +83,8 @@ def LoopOverSim(sa1, sa2):
             pomega_t.append(pomega_data)
 
             # calculate density in defined bin
-            q_min = 29
-            q_max = 30
+            q_min = 30
+            q_max = 31
             q_data = np.array(q_data)
             e_data = np.array(e_data)
             a_data = np.array(a_data)
@@ -93,8 +94,8 @@ def LoopOverSim(sa1, sa2):
             mask = (q_data >= q_min) & (q_data <= q_max)
             # x_filtered = q_data[mask]
             y_filtered = e_data[mask]
-
-            if len(y_filtered) > 0:
+            
+            if len(y_filtered) > 1:
                 kde = gaussian_kde(y_filtered, bw_method=my_kde_bandwidth)
                 y = np.linspace(min(y_filtered), max(y_filtered), 1000)
                 kde_values.append(kde(y))
@@ -137,7 +138,7 @@ def LoopOverSim(sa1, sa2):
 
 # kde_values, y_values, y_t, q_min, q_max = LoopOverSim(sa1, sa2)
 
-simulation_data = LoopOverSim(sa1, sa2)
+simulation_data = LoopOverSim(sa1)#, sa2)
 
 kde_values = simulation_data["kde_values"]
 y_values = simulation_data["y_values"]
@@ -147,15 +148,15 @@ q_max = simulation_data["q_max"]
 
 
 # plotting forced eccentricies
-pomega_filtered_t = simulation_data["pomega_filtered_t"]
-e_t = simulation_data["pomega_filtered_t"]
+# pomega_filtered_t = simulation_data["pomega_filtered_t"]
+# e_t = simulation_data["pomega_filtered_t"]
 
-fig, axs = plt.subplots(2, 1)
-axs[0].scatter(
-    e_t[0] * np.cos(pomega_filtered_t[0]), e_t[0] * np.sin(pomega_filtered_t[0])
-)
-axs[1].scatter(e_t[0], pomega_filtered_t[0])
-plt.show()
+# fig, axs = plt.subplots(2, 1)
+# axs[0].scatter(
+#     e_t[0] * np.cos(pomega_filtered_t[0]), e_t[0] * np.sin(pomega_filtered_t[0])
+# )
+# axs[1].scatter(e_t[0], pomega_filtered_t[0])
+# plt.show()
 
 
 # Finding peaks and FWHM
@@ -176,37 +177,34 @@ for i in range(len(kde_values)):
             peak_y = kde_values[i][peak] / kde_values[0][peak]
 
             # Find FWHM
-            widths, width_heights, left_ips, right_ips = peak_widths(
-                kde_values[i] / kde_values[0], [peak], rel_height=0.5
-            )
-            left_ip = y_values[i][int(left_ips[0])]
-            right_ip = y_values[i][int(right_ips[0])]
+            # widths, width_heights, left_ips, right_ips = peak_widths(
+            #     kde_values[i] / kde_values[0], [peak], rel_height=0.5
+            # )
+            # left_ip = y_values[i][int(left_ips[0])]
+            # right_ip = y_values[i][int(right_ips[0])]
 
-            # save peaks and fwhm
-            left_ip = np.array(left_ip)
-            right_ip = np.array(right_ip)
+            # # save peaks and fwhm
+            # left_ip = np.array(left_ip)
+            # right_ip = np.array(right_ip)
 
             peak_t.append(peak_x)
-            fwhm_t.append(abs(left_ip - right_ip))
+            # fwhm_t.append(abs(left_ip - right_ip))
 
 # Plot time evolution of FWMH and peaks
 
-fig, axs = plt.subplots(2, 1, sharex=True)
-axs[0].scatter(np.arange(0, len(fwhm_t), 1), fwhm_t, s=2)
-axs[0].set_ylabel(r"$\Delta e_\text{FWHM}$")
-axs[1].scatter(np.arange(0, len(fwhm_t), 1), peak_t, s=2)
-axs[1].set_ylabel(r"$e_{\text{peak}}$")
-# axs[1].hlines(0.25, 0, len(fwhm_t), colors="tab:orange", linestyles="dashed")
-axs[1].set_xlabel(r"timesteps")
-plt.savefig(f"plots/peaks-fwhm-evolution-q{q_min}_{q_max}.pdf")
+fig, ax = plt.subplots()
+ax.scatter(np.arange(0, len(peak_t), 1), peak_t, s=2)
+ax.set_ylabel(r"$e_{\text{peak}}$")
+ax.set_xlabel(r"timesteps")
+plt.savefig(f"plots/10e8-peaks-evolution-q{q_min}_{q_max}.pdf")
 
 # Plotting setup
 fig, ax = plt.subplots()
 colors = plt.cm.hot(np.linspace(0, 1, len(kde_values)))
 
 for i in range(len(kde_values)):
-    if i % 100 == 0:
-        # plot KDE densities normalised with distribiton at t=0
+    if i % 1000 == 0:
+        # plot KDE densities normalised with distribution at t=0
         ax.plot(
             y_values[i],
             kde_values[i] / kde_values[0],
@@ -217,31 +215,17 @@ for i in range(len(kde_values)):
         ax.set_xlabel(r"e")
         # ax.plot(y_t[i], np.zeros(y_t[i].shape), "b+", ms=10)
 
-        # Find peaks
-        peaks, _ = find_peaks(kde_values[i] / kde_values[0])
-        if len(peaks) > 0:
-            # Take the highest peak
-            peak = peaks[np.argmax(kde_values[i][peaks] / kde_values[0][peaks])]
-            peak_x = y_values[i][peak]
-            peak_y = kde_values[i][peak] / kde_values[0][peak]
-            ax.plot(peak_x, peak_y, "ro")
-
-            # Find FWHM
-            widths, width_heights, left_ips, right_ips = peak_widths(
-                kde_values[i] / kde_values[0], [peak], rel_height=0.5
-            )
-            left_ip = y_values[i][int(left_ips[0])]
-            right_ip = y_values[i][int(right_ips[0])]
-            ax.plot([left_ip, right_ip], [width_heights[0]] * 2, "g--")
-            ax.text(
-                (left_ip + right_ip) / 2,
-                width_heights[0] + 0.005,
-                f"FWHM: {right_ip - left_ip:.2f}",
-                color="g",
-            )
-
+        # # Find peaks
+        # peaks, _ = find_peaks(kde_values[i] / kde_values[0])
+        # if len(peaks) > 0:
+        #     # Take the highest peak
+        #     peak = peaks[np.argmax(kde_values[i][peaks] / kde_values[0][peaks])]
+        #     peak_x = y_values[i][peak]
+        #     peak_y = kde_values[i][peak] / kde_values[0][peak]
+        #     ax.plot(peak_x, peak_y, "ro")
+           
 ax.legend()
-plt.savefig(f"plots/example-peaks-fwhm-q{q_min}_{q_max}.pdf")
+plt.savefig(f"plots/10e8-example-peaks-fwhm-q{q_min}_{q_max}.pdf")
 
 
 # calculate peaks and FWHM
@@ -299,10 +283,11 @@ def update(frame):
 ani = FuncAnimation(fig, update, frames=len(kde_values), init_func=init, blit=True)
 print("start saving animation")
 # ani.save(
-#    f"gifs/density-evolution-q-{q_min}_{q_max}.mp4",
+#    f"gifs/10e8-density-evolution-q-{q_min}_{q_max}.mp4",
 #    writer="ffmpeg",
 #    fps=24,
 #    bitrate=1500,
 # )
 print("finished saving animation")
-plt.close()
+plt.show()
+
