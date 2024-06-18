@@ -3,23 +3,7 @@ import rebound
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-plt.rc('text', usetex=True)
-plt.rc('axes', labelsize=11) #fontsize of the x and y labels
-plt.rcParams['text.latex.preamble']= r"\usepackage{amsmath}\usepackage{siunitx}\usepackage{newtx}"
-plt.rcParams['errorbar.capsize']=4 # Einstellung Dicke der Fehlerbalkenenden
-plt.rc('axes', labelsize=11, titlesize=16)
-plt.rc('legend', fontsize=11)
-plt.rc('xtick', labelsize=11) #fontsize of the x tick labels
-plt.rc('ytick', labelsize=11) #fontsize of the y tick labels
-plt.rcParams["figure.autolayout"] = True
-plt.rcParams["axes.axisbelow"] = True
-plt.rcParams["xtick.minor.visible"] = True
-plt.rcParams["ytick.minor.visible"] = True
-plt.rcParams["xtick.direction"] = 'in'
-plt.rcParams["ytick.direction"] = 'in'
-plt.rcParams["xtick.top"] = True
-plt.rcParams["ytick.right"] = True
+plt.style.use("custom.mplstyle")
 
 #%% setup simulation data
 
@@ -32,16 +16,16 @@ M_sun = 1
 M_neptune = 5.151383772628957e-05
 a_neptune = 30.237878368382898
 
-sa = rebound.Simulationarchive("archives/archive-t_1e6-mercurius-10_rhill_01.bin")
+sa = rebound.Simulationarchive("archives/mercurius_tsim_1e9_dtias15_5e-4_dt_5_rhill_2.bin")
 
 #%% Plot for e(q) change
 # Initialize a figure and axis
-fig, ax = plt.subplots(figsize=(5, 5), dpi=300, constrained_layout=True)
+fig, ax = plt.subplots()
 
 # Initialize the plot objects
 line, = ax.plot([], [],'.', ms=3, color="tab:blue")
-ax.vlines(a_neptune + 10 * r_hill(a_neptune, M_neptune, M_sun), 0, 1.25, colors='r', linestyles='dashed')
-ax.vlines(a_neptune - 10 * r_hill(a_neptune, M_neptune, M_sun), 0, 1.25, colors='r', linestyles='dashed')
+ax.vlines(a_neptune + 11 * r_hill(a_neptune, M_neptune, M_sun), 0, 1.25, colors='r', linestyles='dashed')
+ax.vlines(a_neptune - 5 * r_hill(a_neptune, M_neptune, M_sun), 0, 1.25, colors='r', linestyles='dashed')
 ax.set_xlabel("pericentre distance $q$ [au]")
 ax.set_ylabel("eccentricity $e$")
 
@@ -52,22 +36,27 @@ def init():
 
 # Define the update function
 def update(s):
-    sim = sa[s+10]  # iterate through each snapshot in sa
-    ps = sim.particles  # intermediate object to simplify the referencing
-    x_data = [ps[i].orbit(primary=sim.particles[0]).a * (1-ps[i].orbit(primary=sim.particles[0]).e) for i in range(1, len(ps))]  # perihelion distance
-    y_data = [ps[i].orbit(primary=sim.particles[0]).e for i in range(1, len(ps))]  # eccentricity
-    line.set_data(x_data, y_data)
-    ax.set_title(r"$t_{\text{sim}}=$ + "f"{int(sa[s+10].t)} yr")  # Add a title with the frame number
-    # Set axis limits
-    ax.set_xlim(5, 60)
-    ax.set_ylim(0, 1.25)
+    if s % 100 == 0:
+        sim = sa[s]  # iterate through each snapshot in sa
+        ps = sim.particles  # intermediate object to simplify the referencing
+        x_data = [ps[i].orbit(primary=sim.particles[0]).a * (1-ps[i].orbit(primary=sim.particles[0]).e) for i in range(1, len(ps))]  # perihelion distance
+        y_data = [ps[i].orbit(primary=sim.particles[0]).e for i in range(1, len(ps))]  # eccentricity
+        line.set_data(x_data, y_data)
+        ax.set_title(r"$t_{\text{sim}}=$ + "f"{int(sa[s].t)} yr")  # Add a title with the frame number
+        # Set axis limits
+        ax.set_xlim(5, 60)
+        ax.set_ylim(0, 1.25)
     return line,
 
 # Create the animation
 ani = FuncAnimation(fig, update, frames=len(sa), init_func=init, blit=True)
 
-# Save the animation as a GIF
-ani.save('gifs/q-t_1e6-mercurius-10_rhill_01_term.gif', writer='pillow', fps=24)
+ani.save(
+   "gifs/10e8-evolution-q.mp4",
+   writer="ffmpeg",
+   fps=24,
+   bitrate=1500,
+)# Save the animation as a GIF
 
 plt.close()
 
