@@ -16,7 +16,7 @@ M_sun = 1
 M_neptune = 5.151383772628957e-05
 a_neptune = 30.237878368382898
 
-sa = rebound.Simulationarchive("archives/mercurius_tsim_1e9_dtias15_5e-4_dt_5_rhill_2.bin")
+sa = rebound.Simulationarchive("archives/mercurius_tsim_1e7_dtias15_5e-4_dt_5_rhill_2_final.bin")
 
 #%% Plot for e(q) change
 # Initialize a figure and axis
@@ -24,8 +24,8 @@ fig, ax = plt.subplots()
 
 # Initialize the plot objects
 line, = ax.plot([], [],'.', ms=3, color="tab:blue")
-ax.vlines(a_neptune + 11 * r_hill(a_neptune, M_neptune, M_sun), 0, 1.25, colors='r', linestyles='dashed')
-ax.vlines(a_neptune - 5 * r_hill(a_neptune, M_neptune, M_sun), 0, 1.25, colors='r', linestyles='dashed')
+# ax.vlines(a_neptune + 11 * r_hill(a_neptune, M_neptune, M_sun), 0, 1.25, colors='r', linestyles='dashed')
+# ax.vlines(a_neptune - 5 * r_hill(a_neptune, M_neptune, M_sun), 0, 1.25, colors='r', linestyles='dashed')
 ax.set_xlabel("pericentre distance $q$ [au]")
 ax.set_ylabel("eccentricity $e$")
 
@@ -36,7 +36,7 @@ def init():
 
 # Define the update function
 def update(s):
-    if s % 100 == 0:
+    if s % 1 == 0:
         sim = sa[s]  # iterate through each snapshot in sa
         ps = sim.particles  # intermediate object to simplify the referencing
         x_data = [ps[i].orbit(primary=sim.particles[0]).a * (1-ps[i].orbit(primary=sim.particles[0]).e) for i in range(1, len(ps))]  # perihelion distance
@@ -52,7 +52,7 @@ def update(s):
 ani = FuncAnimation(fig, update, frames=len(sa), init_func=init, blit=True)
 
 ani.save(
-   "gifs/10e8-evolution-q.mp4",
+   "gifs/1e7evolution-q.mp4",
    writer="ffmpeg",
    fps=24,
    bitrate=1500,

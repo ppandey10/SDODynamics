@@ -11,7 +11,7 @@ plt.style.use("custom.mplstyle")
 # orbital_elements = LoadOrbitalElements("archives/testa.bin", "archives/testb.bin")
 # orbital_elements = LoadOrbitalElements("archives/jup-mercurius-dtmin05-1e6-low.bin", "archives/jup-mercurius-dtmin05-1e6-high.bin")
 orbital_elements = LoadOrbitalElements(
-    "archives/mercurius_tsim_1e9_dtias15_5e-4_dt_5_rhill_2.bin"
+    "archives/mercurius_tsim_1e7_dtias15_5e-4_dt_5_rhill_2_final.bin"
 )
 
 sa1 = orbital_elements["sa1"]
@@ -83,8 +83,8 @@ def LoopOverSim(sa1):#, sa2):
             pomega_t.append(pomega_data)
 
             # calculate density in defined bin
-            q_min = 30
-            q_max = 31
+            q_min = 41
+            q_max = 42
             q_data = np.array(q_data)
             e_data = np.array(e_data)
             a_data = np.array(a_data)
@@ -196,14 +196,14 @@ fig, ax = plt.subplots()
 ax.scatter(np.arange(0, len(peak_t), 1), peak_t, s=2)
 ax.set_ylabel(r"$e_{\text{peak}}$")
 ax.set_xlabel(r"timesteps")
-plt.savefig(f"plots/10e8-peaks-evolution-q{q_min}_{q_max}.pdf")
+plt.savefig(f"plots/10e7-peaks-evolution-q{q_min}_{q_max}.pdf")
 
 # Plotting setup
 fig, ax = plt.subplots()
-colors = plt.cm.hot(np.linspace(0, 1, len(kde_values)))
+colors = plt.cm.inferno(np.linspace(0, 1, len(kde_values)))
 
 for i in range(len(kde_values)):
-    if i % 1000 == 0:
+    if i % 100 == 0:
         # plot KDE densities normalised with distribution at t=0
         ax.plot(
             y_values[i],
@@ -225,7 +225,7 @@ for i in range(len(kde_values)):
         #     ax.plot(peak_x, peak_y, "ro")
            
 ax.legend()
-plt.savefig(f"plots/10e8-example-peaks-fwhm-q{q_min}_{q_max}.pdf")
+plt.savefig(f"plots/10e7-example-peaks-fwhm-q{q_min}_{q_max}.pdf")
 
 
 # calculate peaks and FWHM
