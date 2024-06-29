@@ -2,6 +2,7 @@ import rebound
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.colors import SymLogNorm, LogNorm
 
 plt.style.use("~/custom.mplstyle")
 
@@ -41,11 +42,9 @@ removed_particles_count = len(proper_elements_final) - np.sum(mask)
 proper_elements_final = proper_elements_final[mask]
 proper_elements_initial = proper_elements_initial[mask]
 
-for i in range(len(proper_elements_initial)):
-    print("(", proper_elements_initial[i,0], proper_elements_initial[i,1], ")", 
-          "(", proper_elements_final[i,0], proper_elements_final[i,1], ")") 
-
-print(len(proper_elements_initial))
+# for i in range(len(proper_elements_initial)):
+#     print("(", proper_elements_initial[i,0], proper_elements_initial[i,1], ")", 
+#           "(", proper_elements_final[i,0], proper_elements_final[i,1], ")") 
 
 print(f"Number of particles removed: {removed_particles_count}")
 
@@ -94,18 +93,6 @@ result_df = pd.DataFrame(result)
 # Save the result to a CSV file
 result_df.to_csv('diffusion_speeds.csv', index=False)
 
-# Optionally, visualize the result
-
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(result_df['a_bin'].apply(lambda x: (x[0]+x[1])/2),
-#            result_df['e_bin'].apply(lambda x: (x[0]+x[1])/2),
-#            result_df['avg_delta_a'], c=result_df['avg_delta_a'], cmap='viridis')
-
-# ax.set_xlabel('a')
-# ax.set_ylabel('e')
-# ax.set_zlabel('avg_delta_a')
-
 # Extract the mid-points of the bins for plotting
 a_centers = (a_bins[:-1] + a_bins[1:]) / 2
 e_centers = (e_bins[:-1] + e_bins[1:]) / 2
@@ -115,10 +102,9 @@ a_grid, e_grid = np.meshgrid(a_centers, e_centers)
 avg_delta_a_grid = np.full_like(a_grid, np.nan, dtype=np.double)
 avg_delta_e_grid = np.full_like(e_grid, np.nan, dtype=np.double)
 
-
-
 for (i, j), (avg_delta_a, avg_delta_e) in diffusion_speeds.items():
     avg_delta_a_grid[j, i] = avg_delta_a
+    avg_delta_e_grid[j, i] = avg_delta_e
 
 # calculate Tisserand-curve
 a_N = 30.07
@@ -131,6 +117,7 @@ def peri_curve(q):
     e = 1-q/a_values
     return e
 
+### Here starts the plotting ##########################################################################################
 
 # Scatterplot with distribution of particles
 fig, ax = plt.subplots()
@@ -143,27 +130,101 @@ ax.set_xlabel(r"semi-major axis a [au]")
 ax.set_ylim(0,1.05)
 ax.set_xscale("log")
 ax.legend()
-plt.savefig("plots/10-Myr-comp.pdf")
+# plt.savefig("plots/10-Myr-comp.pdf")
 
-# Plot the 2D histogram
-# plt.figure(figsize=(10, 8))
+### Plot the 2D histogram
+
+# normalization
+sym_norm = SymLogNorm(linthresh=0.03, linscale=0.03, vmin=-1000, vmax=1000, base=10)
+
+## for semi-major-axis
+
 fig, ax = plt.subplots()
-c = ax.pcolormesh(a_grid, e_grid, avg_delta_a_grid, shading='auto', cmap='hot')
-fig.colorbar(c, ax=ax, label=r"Diffusion $\Delta a$ [au/$10\,\text{Myr}$]")
-# ax.scatter(proper_elements_initial[:,0], proper_elements_initial[:,1], s=3)
-# ax.scatter(proper_elements_final[:,0], proper_elements_final[:,1], s=3)
-# ax.plot(a_values, e_values)
-ax.plot(a_values, peri_curve(40), color ="k", label=r"$q=40\,\text{au}$")
+
+c = ax.pcolormesh(a_grid, e_grid, avg_delta_a_grid, shading='auto', cmap='coolwarm',norm=sym_norm)
+cbar = fig.colorbar(c, ax=ax, label=r"$\Delta a$ [au/$10\,\text{Myr}$]" )
+cbar.set_ticks(ticks=[-1000, -100, -10, -1, -0.1, -0, 0.1, 1, 10, 100, 1000])
+
+# ax.plot(a_values, peri_curve(30), color ="k", label=r"$q=30\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(35), color ="k", label=r"$q=35\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(40), color ="k", label=r"$q=40\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(45), color ="k", label=r"$q=45\,\text{au}$", linewidth=1)
+
 ax.set_xlabel(r"semi-major axis $a$ [au]")
 ax.set_ylabel(r"eccentricity $e$")
+
 ax.set_ylim(0,1.05)
 ax.legend()
-plt.savefig("plots/diffusion-speed.pdf")
-plt.show()
 
-# plt.figure(figsize=(10, 8))
-# plt.pcolormesh(a_grid, e_grid, avg_delta_e_grid, shading='auto', cmap='viridis')
-# plt.colorbar(label='AverageDe')
-# plt.xlabel('a')
-# plt.ylabel('e')
-# plt.title('2D Histogram of Δa')
+plt.savefig("plots/Delta_a-10Myr.pdf")
+
+## for eccentricities
+
+fig, ax = plt.subplots()
+
+# Find the maximum absolute value in avg_delta_e_grid
+max_abs = max(abs(avg_delta_e_grid.min()), abs(avg_delta_e_grid.max()))
+
+c = ax.pcolormesh(a_grid, e_grid, avg_delta_e_grid, shading='auto', cmap='coolwarm', vmin=-max_abs, vmax=max_abs)
+cbar = fig.colorbar(c, ax=ax, label=r"$\Delta e$ [au/$10\,\text{Myr}$]" )
+
+# ax.plot(a_values, peri_curve(30), color ="k", label=r"$q=30\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(35), color ="k", label=r"$q=35\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(40), color ="k", label=r"$q=40\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(45), color ="k", label=r"$q=45\,\text{au}$", linewidth=1)
+
+ax.set_xlabel(r"semi-major axis $a$ [au]")
+ax.set_ylabel(r"eccentricity $e$")
+
+ax.set_ylim(0,1.05)
+ax.legend() 
+plt.savefig("plots/Delta_e-10Myr.pdf")
+
+
+## absolute change of orbital elements 
+
+# for semi-major axis
+
+fig, ax = plt.subplots()
+
+norm = LogNorm(vmin=0.01, vmax=1000) 
+
+c = ax.pcolormesh(a_grid, e_grid,abs(avg_delta_a_grid), shading='auto', cmap='Reds',norm=norm)
+cbar = fig.colorbar(c, ax=ax, label=r"$|\Delta a|$ [au/$10\,\text{Myr}$]" )
+
+# ax.plot(a_values, peri_curve(30), color ="k", label=r"$q=30\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(35), color ="k", label=r"$q=35\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(40), color ="k", label=r"$q=40\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(45), color ="k", label=r"$q=45\,\text{au}$", linewidth=1)
+
+ax.set_xlabel(r"semi-major axis $a$ [au]")
+ax.set_ylabel(r"eccentricity $e$")
+
+ax.set_ylim(0,1.05)
+ax.legend() 
+plt.savefig("plots/abs-Delta_a-10Myr.pdf")
+
+
+# for eccentrity
+
+fig, ax = plt.subplots()
+
+# Find the maximum absolute value in avg_delta_e_grid
+max_abs = max(abs(avg_delta_e_grid.min()), abs(avg_delta_e_grid.max()))
+
+c = ax.pcolormesh(a_grid, e_grid, abs(avg_delta_e_grid), shading='auto', cmap='Reds') #, vmin=-max_abs, vmax=max_abs)
+cbar = fig.colorbar(c, ax=ax, label=r"$|\Delta e|$ [au/$10\,\text{Myr}$]" )
+
+# ax.plot(a_values, peri_curve(30), color ="k", label=r"$q=30\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(35), color ="k", label=r"$q=35\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(40), color ="k", label=r"$q=40\,\text{au}$", linewidth=1)
+# ax.plot(a_values, peri_curve(45), color ="k", label=r"$q=45\,\text{au}$", linewidth=1)
+
+ax.set_xlabel(r"semi-major axis $a$ [au]")
+ax.set_ylabel(r"eccentricity $e$")
+
+ax.set_ylim(0,1.05)
+
+plt.savefig("plots/abs-Delta_e-10Myr.pdf")
+
+plt.show()
